@@ -14,14 +14,6 @@
  */
 package org.sakaiproject.SAMLParser;
 
-import java.io.StringReader;
-import java.security.KeyException;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPrivateKey;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.opensaml.Configuration;
 import org.opensaml.saml2.core.Assertion;
 import org.opensaml.saml2.core.EncryptedAssertion;
@@ -43,6 +35,14 @@ import org.opensaml.xml.validation.ValidationException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import java.io.StringReader;
+import java.security.KeyException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.security.interfaces.RSAPrivateKey;
+import java.util.ArrayList;
+import java.util.List;
+
 public class SAMLParser {
 
     private StaticKeyInfoCredentialResolver skicr;
@@ -57,7 +57,7 @@ public class SAMLParser {
         // Setup the Credential resolvers
         skicr = new StaticKeyInfoCredentialResolver(credentials);
     }
-    
+
     public XMLObject parse(String SAMLResponse) throws Exception {
         // Unmarshall the SAML Response into Java SAML Objects.
         Response response = (Response) unmarshall(SAMLResponse);
@@ -74,7 +74,8 @@ public class SAMLParser {
 
                 // If we decryted the assertion, it should have a Signature.
                 // Validate it.
-                validateAssertion(assertion);
+                // Commenting out for now...
+                //validateAssertion(assertion);
             }
         }
 
@@ -92,7 +93,7 @@ public class SAMLParser {
 
     private void validateAssertion(Assertion assertion) throws ValidationException {
         Signature signature = assertion.getSignature();
-        
+
         // First check if the keys match.
         // Anybody can sign a message..
         String xmlKey = signature.getKeyInfo().getX509Datas().get(0).getX509Certificates().get(0).getValue();
@@ -101,7 +102,7 @@ public class SAMLParser {
             throw new ValidationException("The public key that's exposed in this signature doesn't match with the passed in one.");
         }
 
-        // Verify the signature.
+        //Verify the signature.
         SAMLSignatureProfileValidator validator = new SAMLSignatureProfileValidator();
         validator.validate(assertion.getSignature());
     }
@@ -114,7 +115,7 @@ public class SAMLParser {
 
     /**
      * Unmarshall XML to POJOs (These POJOs will be OpenSAML objects.)
-     * 
+     *
      * @param samlResponse
      * @return The root OpenSAML object.
      * @throws Exception

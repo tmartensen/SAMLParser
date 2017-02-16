@@ -14,19 +14,21 @@
  */
 package org.sakaiproject.SAMLParser;
 
-import java.io.StringWriter;
-
 import org.opensaml.DefaultBootstrap;
 import org.opensaml.xml.XMLObject;
 import org.opensaml.xml.util.Base64;
 import org.opensaml.xml.util.XMLHelper;
+
+import java.io.StringWriter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 /**
  */
 public class App
 {
     /**
-     * This application takes an input XML string, parses it and decrypts all the embeded EncryptedAssertions 
+     * This application takes an input XML string, parses it and decrypts all the embeded EncryptedAssertions
      * @param args
      * @throws Exception
      */
@@ -45,12 +47,12 @@ public class App
                     " * inputData\n" +
                     "    The SAML data that needs decrypting (if any.)\n" +
                     " * inputEncoding\n" +
-                    "    The encoding format that the inputData is passed in.\n" + 
+                    "    The encoding format that the inputData is passed in.\n" +
                     "    Currently only supports 'base64' or 'plain', defaults to 'plain'.\n" +
                     " * outputEncoding\n" +
-                    "    The encoding format that the decrypted data should be outputted in.\n" + 
+                    "    The encoding format that the decrypted data should be outputted in.\n" +
                     "    Currently only supports 'base64' or 'plain', defaults to 'plain'.\n\n" +
-                    
+
                     "Examples:\n" +
                     "    java -jar org.sakaiproject.Hilary.SAMLParser-1.0-SNAPSHOT-jar-with-dependencies.jar <idpPublicKey> <spPublicKey> <spPrivateKey> '<XML data>'\n" +
                     "    java -jar org.sakaiproject.Hilary.SAMLParser-1.0-SNAPSHOT-jar-with-dependencies.jar <idpPublicKey> <spPublicKey> <spPrivateKey> '<base64-encoded XML data>' 'base64'\n" +
@@ -58,18 +60,18 @@ public class App
             );
             return;
         }
-        
-        String idpPublicKey = args[0];
-        String spPublicKey = args[1];
-        String spPrivateKey = args[2];
-        String samlResponse = args[3];
+
+        String idpPublicKey = java.util.Base64.getEncoder().encodeToString(new String(Files.readAllBytes(Paths.get(args[0]))).getBytes());
+        String spPublicKey = java.util.Base64.getEncoder().encodeToString(new String(Files.readAllBytes(Paths.get(args[1]))).getBytes());
+        String spPrivateKey = java.util.Base64.getEncoder().encodeToString(new String(Files.readAllBytes(Paths.get(args[2]))).getBytes());
+        String samlResponse = new String(Files.readAllBytes(Paths.get(args[3])));
         String inputEncoding = (args.length > 4) ? args[4] : "";
         String outputEncoding = (args.length > 5) ? args[5] : "";
 
         // Bootstrap OpenSAML.
         // This will (for instance) get all the unmarshallers registered.
         DefaultBootstrap.bootstrap();
-        
+
         // Decode the data first if necessary.
         if (inputEncoding.equals("base64")) {
             byte[] decoded = Base64.decode(samlResponse);
@@ -82,8 +84,9 @@ public class App
 
         // Print the parsed response back out to stdout.
         StringWriter stringWriter = new StringWriter();
-        XMLHelper.writeNode(xmlObj.getDOM(), stringWriter);
-        
+        //XMLHelper.writeNode(xmlObj.getDOM(), stringWriter);
+        System.out.println(XMLHelper.prettyPrintXML(xmlObj.getDOM()));
+
         // Encode the output if requested.
         if (outputEncoding.equals("base64")) {
             String encodedData = Base64.encodeBytes(stringWriter.toString().getBytes());
